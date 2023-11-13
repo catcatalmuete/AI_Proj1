@@ -51,6 +51,50 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)
 
+# Define possible moves
+moves = [(0, 1, 'E'), (0, -1, 'W'),  (-1, 0, 'N'), (1, 0, 'S'), (-1, 0, 'U'), (1, 0, 'D')]
+
+# Generates the possible moves from the current state of the puzzle
+def actions(state):
+    # Find position of the empty cell in the puzzle
+    empty_cell = None
+    for x in range(len(state)):
+        for y in range(len(state[i])):
+            if state[x][y] is None:
+                empty_cell = (x, y)
+                break
+        if empty_cell:
+            break
+
+    # Keep track of actions and calculate all changes in row and column positions when making a move
+    actions = []
+    for row, col, action in moves:
+        next_x, next_y = empty_cell[0] + row, empty_cell[1] + col
+        # Check is move is valid, apply it, and append the new state to your actions list
+        if 0 <= next_x < len(state) and 0 <= new_y < len(state[0]):
+            next_state = [list(row) for row in state]
+            next_state[empty_cell[0]][empty_cell[1]], next_state[next_x][next_y] = next_state[next_x][new_y], next_state[empty_cell[0]][empty_cell[1]]
+            actions.append((next_state, action))
+
+    return actions
+
+# Calculates the heuristic value using the Manhattan distance
+def h_val(curr_state, goal_state):
+    h_value = 0  
+    # Iterate over rows and columns of the current state and store the current position
+    for row in range(len(curr_state)):
+        for col in range(len(curr_state[i])):
+            curr_pos = state[i][j]
+
+            if curr_pos is not None:    # If position is not empty
+                # Iterate over rows and columns of the goal state and apply Manhattan distance h val
+                for goal_row in range(len(goal_state)): 
+                    for goal_col in range(len(goal_state[goal_row])):
+                        if curr_pos == goal_state[goal_row][goal_co]:
+                            h_value += abs(row - goal_row) + abs(col - goal_col)  # Manhattan distance
+                            break
+    return h_value
+
 # Converts the input text into 2 lists of lists, one for the puzzle state and one for the goal state 
 def parse_input():
     # Opens and reads the input file
@@ -89,8 +133,29 @@ def parse_input():
     return puzzle_state, goal_state
 
 def main():
-    puzzle_state, goal_state = parse_input()
-    root = Node(puzzle_state)
+    # puzzle_state, goal_state = parse_input()
+    # root = Node(puzzle_state)
 
+    initial_state, goal_state = parse_input()
+    path, actions, f_values, generated_nodes = astar_search(initial_state, goal_state)
+
+    # Output solution
+    with open("output.txt", "w") as file:
+        # Initial State Tile Pattern
+        for row in initial_state:
+            file.write("".join(map(str, row)) + "\n")
+        # Goal State Tile Pattern
+        for row in goal_state:
+            file.write("".join(map(str, row)) + "\n")
+        # Blank Line
+        file.write("\n")
+        # Depth level d of the shallowest goal node
+        file.write(f"{path[0].depth}\n")
+        # Total number of nodes N generated in your tree
+        file.write(f"{generated_nodes}\n")
+        # Solution: Sequence of actions from root node to goal node
+        file.write(" ".join(actions) + "\n")
+        # f(n) values of the nodes along the solution path, from the root node to the goal node
+        file.write(" ".join(map(str, f_values)) + "\n")
 
 main()
