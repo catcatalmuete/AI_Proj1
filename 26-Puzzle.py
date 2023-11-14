@@ -6,10 +6,11 @@ class Node:
         self.goal_state = goal_state  # The goal state of the puzzle
         self.parent = parent  # Reference to the parent node
         self.children = []  # List of references to the children nodes
-        self.action = action # The action that led to this state (East, West, North, South, Up and Down)
+        self.action = action  # The action that led to this state (East, West, North, South, Up and Down)
         self.depth = depth  # The depth of the node in the search tree
         self.cost = cost  # The cumulative cost to reach this node
         self.h_value = self.calculate_heuristic()  # The heuristic value for this node (h(n))
+        self.hashable_state = self.calculate_hashable_state()  # Hashable representation of the state
 
     def __lt__(self, other):
         return (self.cost + self.h_value) < (other.cost + other.h_value)
@@ -20,11 +21,13 @@ class Node:
     def is_goal(self, goal_state):
         # Check if the node's state matches the goal state
         return self.state == goal_state
-
+    
     # Calculates the heuristic value using the Manhattan distance
     def calculate_heuristic(self):
+        # Convert the entire state to a tuple of tuples of tuples
+        state_as_tuple = tuple(map(tuple, map(tuple, self.state)))
+        
         h_value = 0
-
         for layer in range(len(self.state)):
             for row in range(len(self.state[layer])):
                 for col in range(len(self.state[layer][row])):
@@ -39,8 +42,11 @@ class Node:
                                         # Manhattan distance
                                         h_value += abs(layer - goal_layer) + abs(row - goal_row) + abs(col - goal_col)
                                         break
-
         return h_value
+    
+    def calculate_hashable_state(self):
+        # Convert the state to a hashable representation (tuple of tuples of tuples)
+        return tuple(map(tuple, map(tuple, self.state)))
 
     def get_path_actions_fVals(self):
         # Retrieve the path from the root node to this node
@@ -114,10 +120,9 @@ class PriorityQueue:
     
 def AStar_search(initial_state, goal_state):
     visited = set()  # Set to store visited states
-    priority_queue = []  # Priority queue for nodes (f value, node)
+    priority_queue = PriorityQueue()  # Priority queue for nodes (f value, node)
 
     initial_node = Node(initial_state, goal_state)
-    priority_queue = PriorityQueue()
     priority_queue.put(initial_node)
 
     while not priority_queue.is_empty():
@@ -128,7 +133,7 @@ def AStar_search(initial_state, goal_state):
             return current_node.get_path_actions_fVals()
         
         # Convert the current node's state to a hashable object
-        hashable_node_state = tuple(map(lambda sublist: tuple(map(tuple, sublist)), current_node.state))
+        hashable_node_state = current_node.calculate_hashable_state()  # Update this line
 
         if hashable_node_state not in visited:
             # Mark the current state as visited
@@ -137,7 +142,7 @@ def AStar_search(initial_state, goal_state):
             # Generate successor states and add them to the priority queue
             successor_states = current_node.generate_child_nodes()
             for successor in successor_states:
-                if tuple(map(tuple, successor.state)) not in visited:
+                if successor.calculate_hashable_state() not in visited:  # Update this line
                     priority_queue.put(successor)
 
     # If the priority queue becomes empty and the goal is not reached, the puzzle is unsolvable
@@ -180,36 +185,34 @@ def parse_input():
 
     return puzzle_state, goal_state
 
-
-
-
 def main():
     initial_state, goal_state = parse_input()
     path, actions, f_values = AStar_search(initial_state, goal_state)
-    print(path)
-    print(actions)
-    print(f_values)
+
+    # print(path)
+    # print(actions)
+    # print(f_values)
+
     # path, actions, f_values, generated_nodes = astar_search(
     #     initial_state, goal_state)
 
-
     # # Output solution
-    # with open("output.txt", "w") as file:
-    #     # Initial State Tile Pattern
-    #     for row in initial_state:
-    #         file.write("".join(map(str, row)) + "\n")
-    #     # Goal State Tile Pattern
-    #     for row in goal_state:
-    #         file.write("".join(map(str, row)) + "\n")
-    #     # Blank Line
-    #     file.write("\n")
-    #     # Depth level d of the shallowest goal node
-    #     file.write(f"{path[0].depth}\n")
-    #     # Total number of nodes N generated in your tree
-    #     file.write(f"{generated_nodes}\n")
-    #     # Solution: Sequence of actions from root node to goal node
-    #     file.write(" ".join(actions) + "\n")
-    #     # f(n) values of the nodes along the solution path, from the root node to the goal node
-    #     file.write(" ".join(map(str, f_values)) + "\n")
+    with open("output.txt", "w") as file:
+        # Initial State Tile Pattern
+        for row in initial_state:
+            file.write("".join(map(str, row)) + "\n")
+        # Goal State Tile Pattern
+        for row in goal_state:
+            file.write("".join(map(str, row)) + "\n")
+        # Blank Line
+        file.write("\n")
+        # Depth level d of the shallowest goal node
+        file.write(f"{path[0].depth}\n")
+        # Total number of nodes N generated in your tree
+        # file.write(f"{generated_nodes}\n")
+        # Solution: Sequence of actions from root node to goal node
+        file.write(" ".join(actions) + "\n")
+        # f(n) values of the nodes along the solution path, from the root node to the goal node
+        file.write(" ".join(map(str, f_values)) + "\n")
 
 main()
