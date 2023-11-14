@@ -26,10 +26,7 @@ class Node:
         return self.state == goal_state
     
     # Calculates the heuristic value using the Manhattan distance
-    def calculate_heuristic(self):
-        # Convert the entire state to a tuple of tuples of tuples
-        state_as_tuple = tuple(map(tuple, map(tuple, self.state)))
-        
+    def calculate_heuristic(self):  
         h_value = 0
         for layer in range(len(self.state)):
             for row in range(len(self.state[layer])):
@@ -48,10 +45,6 @@ class Node:
                                             abs(col - goal_col)
                                         break
         return h_value
-    
-    def calculate_hashable_state(self):
-        # Convert the state to a hashable representation (tuple of tuples of tuples)
-        return tuple(map(tuple, map(tuple, self.state)))
 
     def get_depth_actions_fVals(self):
         # Retrieve the actions, f_values from the root node to this node through the parent references
