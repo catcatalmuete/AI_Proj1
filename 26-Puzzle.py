@@ -13,6 +13,10 @@ class Node:
         self.cost = cost  # The cumulative cost to reach this node
         self.h_value = self.calculate_heuristic() # The heuristic value for this node (h(n))
 
+    def __lt__(self, other):
+        # Used to compare the f(n) values of two nodes
+        return self.cost + self.h_value < other.cost + other.h_value
+
     def __repr__(self) -> str:
         return f"Node({self.state}, {self.action}, {self.depth}, {self.cost}, {self.h_value})\n"
 
