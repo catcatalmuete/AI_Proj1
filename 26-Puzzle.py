@@ -129,33 +129,13 @@ class PriorityQueue:
 
 def AStar_search(initial_state, goal_state):
     visited = set()  # Set to store visited states
-    priority_queue = []  # Priority queue for nodes (f value, node)
 
     initial_node = Node(initial_state, goal_state)
-    priority_queue = PriorityQueue()
-    priority_queue.put(initial_node)
+    frontier = PriorityQueue()
+    frontier.put(initial_node)
 
-<<<<<<< HEAD
-    while not priority_queue.is_empty():
-        f_val, current_node = priority_queue.get()
+    nodes_generated = 1  # Counter to keep track of the number of nodes generated
 
-        if current_node.is_goal(goal_state):
-            # Found the goal state
-            return current_node.get_path_actions_fVals()
-        
-        # Convert the current node's state to a hashable object
-        hashable_node_state = tuple(map(lambda sublist: tuple(map(tuple, sublist)), current_node.state))
-
-        if hashable_node_state not in visited:
-            # Mark the current state as visited
-            visited.add(hashable_node_state)
-
-            # Generate successor states and add them to the priority queue
-            successor_states = current_node.generate_child_nodes()
-            for successor in successor_states:
-                if tuple(map(tuple, successor.state)) not in visited:
-                    priority_queue.put(successor)
-=======
     while not frontier.is_empty():
         f_val, current_node = frontier.get()
 
@@ -171,7 +151,6 @@ def AStar_search(initial_state, goal_state):
                 frontier.put(successor)
                 visited.add(hashable_node_state)
                 nodes_generated += 1
->>>>>>> 89d59867072224ee51ee4d9a36e984aa58a7ab6f
 
     # If the priority queue becomes empty and the goal is not reached, the puzzle is unsolvable
     return None, nodes_generated
@@ -201,20 +180,8 @@ def parse_input():
 
     return initial_state, goal_state
 
-
-
-
 def main():
     initial_state, goal_state = parse_input()
-<<<<<<< HEAD
-    path, actions, f_values = AStar_search(initial_state, goal_state)
-    print(path)
-    print(actions)
-    print(f_values)
-    # path, actions, f_values, generated_nodes = astar_search(
-    #     initial_state, goal_state)
-
-=======
     results, nodes_generated = AStar_search(initial_state, goal_state)
     depth, actions, f_values = results
 
