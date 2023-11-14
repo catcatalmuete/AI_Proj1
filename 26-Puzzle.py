@@ -63,6 +63,9 @@ class Node:
             actions.append(current_node.action)
             f_values.append(current_node.cost + current_node.h_value)
             current_node = current_node.parent
+        
+        # Add the root node's action and f_value
+        f_values.append(current_node.cost + current_node.h_value)
 
         return [self.depth, actions[::-1], f_values[::-1]]
 
@@ -158,7 +161,7 @@ def AStar_search(initial_state, goal_state):
 # Converts the input text into 2 lists of lists, one for the puzzle state and one for the goal state
 def parse_input():
     # Opens and reads the input file
-    with open("Input1.txt", "r") as file:
+    with open("Input3.txt", "r") as file:
         input_text = file.read()
 
     # Splits the input text into individual grid sections
@@ -186,7 +189,7 @@ def main():
     depth, actions, f_values = results
 
     # Output solution
-    with open("Output1.txt", "w") as file:
+    with open("Output3.txt", "w") as file:
         # Initial State Tile Pattern
         for grid in initial_state:
             for row in grid:
