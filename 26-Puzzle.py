@@ -19,6 +19,12 @@ class Node:
 
     def __repr__(self) -> str:
         return f"Node({self.state}, {self.action}, {self.depth}, {self.cost}, {self.h_value})\n"
+    
+    def print_state(self):
+        for grid in self.state:
+            for row in grid:
+                print(row)
+            print()
 
     def is_goal(self, goal_state):
         # Check if the node's state matches the goal state
@@ -135,11 +141,11 @@ def AStar_search(initial_state, goal_state):
 
     while not frontier.is_empty():
         f_val, current_node = frontier.get()
-        print(current_node)
+
+        current_node.print_state()
 
         if current_node.is_goal(goal_state):
             # Found the goal state
-            print("Goal state found!")
             return current_node.get_depth_actions_fVals(), nodes_generated
 
         # Generate successor states and add them to the priority queue
@@ -177,29 +183,29 @@ def parse_input():
     initial_state = puzzle_state[:3]
     goal_state = puzzle_state[3:]
 
-    # Prints the parsed initial state
-    for grid in initial_state:
-        for row in grid:
-            print(row)
-        print()
+    # # Prints the parsed initial state
+    # for grid in initial_state:
+    #     for row in grid:
+    #         print(row)
+    #     print()
 
-    # Prints the parsed goal state
-    for grid in goal_state:
-        for row in grid:
-            print(row)
-        print()
+    # # Prints the parsed goal state
+    # for grid in goal_state:
+    #     for row in grid:
+    #         print(row)
+    #     print()
 
-    return puzzle_state, goal_state
+    return initial_state, goal_state
 
 
 def main():
     initial_state, goal_state = parse_input()
     results, nodes_generated = AStar_search(initial_state, goal_state)
-    # depth, actions, f_values = results
-    # print(depth)
-    # print(nodes_generated)
-    # print(actions)
-    # print(f_values)
+    depth, actions, f_values = results
+    print(depth)
+    print(nodes_generated)
+    print(actions)
+    print(f_values)
 
     # # Output solution
     # with open("Output1.txt", "w") as file:
