@@ -1,21 +1,46 @@
 import heapq
 
 class Node:
-    def __init__(self, state, parent=None, action=None, depth=0, cost=0, hVal=0):
+    def __init__(self, state, goal_state, parent=None, action=None, depth=0, cost=0):
         self.state = state  # The state of the puzzle
+        self.goal_state = goal_state  # The goal state of the puzzle
         self.parent = parent  # Reference to the parent node
         self.children = []  # List of references to the children nodes
-        self.action = action  # The action that led to this state (East, West, North, South, Up and Down)
+        self.action = action # The action that led to this state (East, West, North, South, Up and Down)
         self.depth = depth  # The depth of the node in the search tree
         self.cost = cost  # The cumulative cost to reach this node
-        self.hVal = hVal  # The heuristic value for this node (h(n))
+        self.h_value = self.calculate_heuristic()  # The heuristic value for this node (h(n))
 
     def __lt__(self, other):
-        return (self.cost + self.heuristic) < (other.cost + other.heuristic)
+        return (self.cost + self.h_value) < (other.cost + other.h_value)
+    
+    def __repr__(self) -> str:
+        return f"Node({self.state}, {self.action}, {self.depth}, {self.cost}, {self.h_value})\n"
 
     def is_goal(self, goal_state):
         # Check if the node's state matches the goal state
         return self.state == goal_state
+
+    # Calculates the heuristic value using the Manhattan distance
+    def calculate_heuristic(self):
+        h_value = 0
+
+        for layer in range(len(self.state)):
+            for row in range(len(self.state[layer])):
+                for col in range(len(self.state[layer][row])):
+                    curr_pos = self.state[layer][row][col]
+
+                    if curr_pos is not None:  # If position is not empty
+                        # Iterate over layers, rows, and columns of the goal state
+                        for goal_layer in range(len(self.goal_state)):
+                            for goal_row in range(len(self.goal_state[goal_layer])):
+                                for goal_col in range(len(self.goal_state[goal_layer][goal_row])):
+                                    if curr_pos == self.goal_state[goal_layer][goal_row][goal_col]:
+                                        # Manhattan distance
+                                        h_value += abs(layer - goal_layer) + abs(row - goal_row) + abs(col - goal_col)
+                                        break
+
+        return h_value
 
     def get_path_actions_fVals(self):
         # Retrieve the path from the root node to this node
@@ -27,15 +52,51 @@ class Node:
         while current_node.parent:
             path.append(current_node)
             actions.append(current_node.action)
-            f_values.append(current_node.cost + current_node.hVal)
+            f_values.append(current_node.cost + current_node.h_value)
             current_node = current_node.parent
 
         return [path[::-1], actions[::-1], f_values[::-1]]
-    
-    # def get_children(self):
-        
+
+    def generate_child_nodes(self):
+        child_nodes = []
+
+        for layer in range(3):
+            for i in range(3):
+                for j in range(3):
+                    if self.state[layer][i][j] is None:
+                        # Found the empty space, now check valid moves
+
+                        # Possible moves: [east, west, north, south, up, down]
+                        moves = [(0, 1, "E"), (0, -1, "W"), (-1, 0, "N"), (1, 0, "S"), (0, 0, 1, "U"), (0, 0, -1, "D")]
+
+                        for move in moves:
+                            if len(move) == 3:
+                                # Moving within the same grid
+                                new_row, new_col = i + move[0], j + move[1]
+                                if 0 <= new_row < 3 and 0 <= new_col < 3:
+                                    # Create a copy of the current state to modify
+                                    new_state = [[[cell for cell in row] for row in grid] for grid in self.state]
+                                    # Swap the empty space with the neighboring tile
+                                    new_state[layer][i][j], new_state[layer][new_row][new_col] = new_state[layer][new_row][new_col], new_state[layer][i][j]
+                                    # Create a new Node representing the successor state
+                                    successor_node = Node(new_state, goal_state=self.goal_state, parent=self, action=move[2], depth=self.depth + 1, cost=self.cost + 1)
+                                    child_nodes.append(successor_node)
+                            elif len(move) == 4:
+                                # Moving between layers
+                                new_layer = layer + move[2]
+                                if 0 <= new_layer < 3:
+                                    # Create a copy of the current state to modify
+                                    new_state = [[[cell for cell in row] for row in grid] for grid in self.state]
+                                    # Swap the empty space between layers
+                                    new_state[layer][i][j], new_state[new_layer][i][j] = new_state[new_layer][i][j], new_state[layer][i][j]
+                                    # Create a new Node representing the successor state
+                                    successor_node = Node(new_state, goal_state=self.goal_state, parent=self, action=move[3], depth=self.depth + 1, cost=self.cost + 1)
+                                    child_nodes.append(successor_node)
+
+        return child_nodes
+
 # Priority queue implementation using heapq
-# The priority queue is used to store the nodes that are generated during the search
+# The priority queue is used to store the nodes that are generated during the A* search
 # The nodes are stored in the priority queue based on their f(n) values
 class PriorityQueue:
     def __init__(self):
@@ -46,56 +107,43 @@ class PriorityQueue:
 
     # Heap will maintain the minimum f(n) value at the root as well as the the Node object associated with it
     def put(self, node):
-        heapq.heappush(self.elements, (node.cost + node.hVal, node))
+        heapq.heappush(self.elements, (node.cost + node.h_value, node))
 
     def get(self):
         return heapq.heappop(self.elements)
+    
+def AStar_search(initial_state, goal_state):
+    visited = set()  # Set to store visited states
+    priority_queue = []  # Priority queue for nodes (f value, node)
 
-# Define possible moves
-moves = [(0, 1, 'E'), (0, -1, 'W'),  (-1, 0, 'N'), (1, 0, 'S'), (-1, 0, 'U'), (1, 0, 'D')]
+    initial_node = Node(initial_state, goal_state)
+    priority_queue = PriorityQueue()
+    priority_queue.put(initial_node)
 
-# Generates the possible moves from the current state of the puzzle
-def actions(state):
-    # Find position of the empty cell in the puzzle
-    empty_cell = None
-    for x in range(len(state)):
-        for y in range(len(state[i])):
-            if state[x][y] is None:
-                empty_cell = (x, y)
-                break
-        if empty_cell:
-            break
+    while not priority_queue.is_empty():
+        f_val, current_node = priority_queue.get()
 
-    # Keep track of actions and calculate all changes in row and column positions when making a move
-    actions = []
-    for row, col, action in moves:
-        next_x, next_y = empty_cell[0] + row, empty_cell[1] + col
-        # Check is move is valid, apply it, and append the new state to your actions list
-        if 0 <= next_x < len(state) and 0 <= new_y < len(state[0]):
-            next_state = [list(row) for row in state]
-            next_state[empty_cell[0]][empty_cell[1]], next_state[next_x][next_y] = next_state[next_x][new_y], next_state[empty_cell[0]][empty_cell[1]]
-            actions.append((next_state, action))
+        if current_node.is_goal(goal_state):
+            # Found the goal state
+            return current_node.get_path_actions_fVals()
+        
+        # Convert the current node's state to a hashable object
+        hashable_node_state = tuple(map(lambda sublist: tuple(map(tuple, sublist)), current_node.state))
 
-    return actions
+        if hashable_node_state not in visited:
+            # Mark the current state as visited
+            visited.add(hashable_node_state)
 
-# Calculates the heuristic value using the Manhattan distance
-def h_val(curr_state, goal_state):
-    h_value = 0  
-    # Iterate over rows and columns of the current state and store the current position
-    for row in range(len(curr_state)):
-        for col in range(len(curr_state[i])):
-            curr_pos = state[i][j]
+            # Generate successor states and add them to the priority queue
+            successor_states = current_node.generate_child_nodes()
+            for successor in successor_states:
+                if tuple(map(tuple, successor.state)) not in visited:
+                    priority_queue.put(successor)
 
-            if curr_pos is not None:    # If position is not empty
-                # Iterate over rows and columns of the goal state and apply Manhattan distance h val
-                for goal_row in range(len(goal_state)): 
-                    for goal_col in range(len(goal_state[goal_row])):
-                        if curr_pos == goal_state[goal_row][goal_co]:
-                            h_value += abs(row - goal_row) + abs(col - goal_col)  # Manhattan distance
-                            break
-    return h_value
+    # If the priority queue becomes empty and the goal is not reached, the puzzle is unsolvable
+    return None
 
-# Converts the input text into 2 lists of lists, one for the puzzle state and one for the goal state 
+# Converts the input text into 2 lists of lists, one for the puzzle state and one for the goal state
 def parse_input():
     # Opens and reads the input file
     with open("Input1.txt", "r") as file:
@@ -123,7 +171,7 @@ def parse_input():
         for row in grid:
             print(row)
         print()
-    
+
     # Prints the parsed goal state
     for grid in goal_state:
         for row in grid:
@@ -132,30 +180,36 @@ def parse_input():
 
     return puzzle_state, goal_state
 
+
+
+
 def main():
-    # puzzle_state, goal_state = parse_input()
-    # root = Node(puzzle_state)
-
     initial_state, goal_state = parse_input()
-    path, actions, f_values, generated_nodes = astar_search(initial_state, goal_state)
+    path, actions, f_values = AStar_search(initial_state, goal_state)
+    print(path)
+    print(actions)
+    print(f_values)
+    # path, actions, f_values, generated_nodes = astar_search(
+    #     initial_state, goal_state)
 
-    # Output solution
-    with open("output.txt", "w") as file:
-        # Initial State Tile Pattern
-        for row in initial_state:
-            file.write("".join(map(str, row)) + "\n")
-        # Goal State Tile Pattern
-        for row in goal_state:
-            file.write("".join(map(str, row)) + "\n")
-        # Blank Line
-        file.write("\n")
-        # Depth level d of the shallowest goal node
-        file.write(f"{path[0].depth}\n")
-        # Total number of nodes N generated in your tree
-        file.write(f"{generated_nodes}\n")
-        # Solution: Sequence of actions from root node to goal node
-        file.write(" ".join(actions) + "\n")
-        # f(n) values of the nodes along the solution path, from the root node to the goal node
-        file.write(" ".join(map(str, f_values)) + "\n")
+
+    # # Output solution
+    # with open("output.txt", "w") as file:
+    #     # Initial State Tile Pattern
+    #     for row in initial_state:
+    #         file.write("".join(map(str, row)) + "\n")
+    #     # Goal State Tile Pattern
+    #     for row in goal_state:
+    #         file.write("".join(map(str, row)) + "\n")
+    #     # Blank Line
+    #     file.write("\n")
+    #     # Depth level d of the shallowest goal node
+    #     file.write(f"{path[0].depth}\n")
+    #     # Total number of nodes N generated in your tree
+    #     file.write(f"{generated_nodes}\n")
+    #     # Solution: Sequence of actions from root node to goal node
+    #     file.write(" ".join(actions) + "\n")
+    #     # f(n) values of the nodes along the solution path, from the root node to the goal node
+    #     file.write(" ".join(map(str, f_values)) + "\n")
 
 main()
