@@ -14,17 +14,12 @@ class Node:
         self.h_value = self.calculate_heuristic() # The heuristic value for this node (h(n))
 
     def __lt__(self, other):
-        # Used to compare the f(n) values of two nodes
+        # Used to compare the f(n) values of two nodes, used by the priority queue
         return self.cost + self.h_value < other.cost + other.h_value
 
+    # Prints the node's state, action, depth, cost, and h(n) values
     def __repr__(self) -> str:
         return f"Node({self.state}, {self.action}, {self.depth}, {self.cost}, {self.h_value})\n"
-    
-    def print_state(self):
-        for grid in self.state:
-            for row in grid:
-                print(row)
-            print()
 
     def is_goal(self, goal_state):
         # Check if the node's state matches the goal state
@@ -54,7 +49,7 @@ class Node:
         return h_value
 
     def get_depth_actions_fVals(self):
-        # Retrieve the path from the root node to this node
+        # Retrieve the actions, f_values from the root node to this node through the parent references
         actions = []
         f_values = []
 
@@ -72,7 +67,7 @@ class Node:
         for layer in range(3):
             for i in range(3):
                 for j in range(3):
-                    if self.state[layer][i][j] is None:
+                    if self.state[layer][i][j]==0:
                         # Found the empty space, now check valid moves
 
                         # Possible moves: [east, west, north, south, up, down]
@@ -142,8 +137,6 @@ def AStar_search(initial_state, goal_state):
     while not frontier.is_empty():
         f_val, current_node = frontier.get()
 
-        current_node.print_state()
-
         if current_node.is_goal(goal_state):
             # Found the goal state
             return current_node.get_depth_actions_fVals(), nodes_generated
@@ -176,24 +169,12 @@ def parse_input():
         lines = layer.split('\n')
         for line in lines:
             values = line.split()
-            row = [int(value) if value != '0' else None for value in values]
+            row = [int(value) for value in values]
             grid.append(row)
         puzzle_state.append(grid)
 
     initial_state = puzzle_state[:3]
     goal_state = puzzle_state[3:]
-
-    # # Prints the parsed initial state
-    # for grid in initial_state:
-    #     for row in grid:
-    #         print(row)
-    #     print()
-
-    # # Prints the parsed goal state
-    # for grid in goal_state:
-    #     for row in grid:
-    #         print(row)
-    #     print()
 
     return initial_state, goal_state
 
@@ -202,29 +183,26 @@ def main():
     initial_state, goal_state = parse_input()
     results, nodes_generated = AStar_search(initial_state, goal_state)
     depth, actions, f_values = results
-    print(depth)
-    print(nodes_generated)
-    print(actions)
-    print(f_values)
 
-    # # Output solution
-    # with open("Output1.txt", "w") as file:
-    #     # Initial State Tile Pattern
-    #     # for row in initial_state:
-    #     #     file.write("".join(map(str, row)) + "\n")
-    #     # # Goal State Tile Pattern
-    #     # for row in goal_state:
-    #     #     file.write("".join(map(str, row)) + "\n")
-    #     # Blank Line
-    #     file.write("\n")
-    #     # Depth level d of the shallowest goal node
-    #     file.write(f"{depth}\n")
-    #     # Total number of nodes N generated in your tree
-    #     file.write(f"{nodes_generated}\n")
-    #     # Solution: Sequence of actions from root node to goal node
-    #     file.write(" ".join(actions) + "\n")
-    #     # f(n) values of the nodes along the solution path, from the root node to the goal node
-    #     file.write(" ".join(map(str, f_values)) + "\n")
-
+    # Output solution
+    with open("Output1.txt", "w") as file:
+        # Initial State Tile Pattern
+        for grid in initial_state:
+            for row in grid:
+                file.write(" ".join(map(str, row)) + "\n")
+            file.write("\n")
+        # Goal State Tile Pattern
+        for grid in goal_state:
+            for row in grid:
+                file.write(" ".join(map(str, row)) + "\n")
+            file.write("\n")
+        # Depth level d of the shallowest goal node
+        file.write(f"{depth}\n")
+        # Total number of nodes N generated in your tree
+        file.write(f"{nodes_generated}\n")
+        # Solution: Sequence of actions from root node to goal node
+        file.write(" ".join(actions) + "\n")
+        # f(n) values of the nodes along the solution path, from the root node to the goal node
+        file.write(" ".join(map(str, f_values)) + "\n")
 
 main()
