@@ -8,10 +8,10 @@ class Node:
         self.goal_state = goal_state  # The goal state of the puzzle
         self.parent = parent  # Reference to the parent node
         self.children = []  # List of references to the children nodes
-        self.action = action # The action that led to this state (East, West, North, South, Up and Down)
+        self.action = action  # The action that led to this state (East, West, North, South, Up and Down)
         self.depth = depth  # The depth of the node in the search tree
         self.cost = cost  # The cumulative cost to reach this node
-        self.h_value = self.calculate_heuristic() # The heuristic value for this node (h(n))
+        self.h_value = self.calculate_heuristic()  # The heuristic value for this node (h(n))
 
     def __lt__(self, other):
         # Used to compare the f(n) values of two nodes, used by the priority queue
@@ -24,11 +24,13 @@ class Node:
     def is_goal(self, goal_state):
         # Check if the node's state matches the goal state
         return self.state == goal_state
-
+    
     # Calculates the heuristic value using the Manhattan distance
     def calculate_heuristic(self):
+        # Convert the entire state to a tuple of tuples of tuples
+        state_as_tuple = tuple(map(tuple, map(tuple, self.state)))
+        
         h_value = 0
-
         for layer in range(len(self.state)):
             for row in range(len(self.state[layer])):
                 for col in range(len(self.state[layer][row])):
@@ -45,8 +47,11 @@ class Node:
                                             abs(row - goal_row) + \
                                             abs(col - goal_col)
                                         break
-
         return h_value
+    
+    def calculate_hashable_state(self):
+        # Convert the state to a hashable representation (tuple of tuples of tuples)
+        return tuple(map(tuple, map(tuple, self.state)))
 
     def get_depth_actions_fVals(self):
         # Retrieve the actions, f_values from the root node to this node through the parent references
@@ -124,16 +129,33 @@ class PriorityQueue:
 
 def AStar_search(initial_state, goal_state):
     visited = set()  # Set to store visited states
-    frontier = PriorityQueue()
+    priority_queue = []  # Priority queue for nodes (f value, node)
+
     initial_node = Node(initial_state, goal_state)
-    frontier.put(initial_node)
+    priority_queue = PriorityQueue()
+    priority_queue.put(initial_node)
 
-    # Convert the current node's state to a hashable object
-    hashable_node_state = tuple(map(lambda sublist: tuple(map(tuple, sublist)), initial_node.state))
-    visited.add(hashable_node_state)
+<<<<<<< HEAD
+    while not priority_queue.is_empty():
+        f_val, current_node = priority_queue.get()
 
-    nodes_generated = 1
+        if current_node.is_goal(goal_state):
+            # Found the goal state
+            return current_node.get_path_actions_fVals()
+        
+        # Convert the current node's state to a hashable object
+        hashable_node_state = tuple(map(lambda sublist: tuple(map(tuple, sublist)), current_node.state))
 
+        if hashable_node_state not in visited:
+            # Mark the current state as visited
+            visited.add(hashable_node_state)
+
+            # Generate successor states and add them to the priority queue
+            successor_states = current_node.generate_child_nodes()
+            for successor in successor_states:
+                if tuple(map(tuple, successor.state)) not in visited:
+                    priority_queue.put(successor)
+=======
     while not frontier.is_empty():
         f_val, current_node = frontier.get()
 
@@ -149,6 +171,7 @@ def AStar_search(initial_state, goal_state):
                 frontier.put(successor)
                 visited.add(hashable_node_state)
                 nodes_generated += 1
+>>>>>>> 89d59867072224ee51ee4d9a36e984aa58a7ab6f
 
     # If the priority queue becomes empty and the goal is not reached, the puzzle is unsolvable
     return None, nodes_generated
@@ -179,8 +202,19 @@ def parse_input():
     return initial_state, goal_state
 
 
+
+
 def main():
     initial_state, goal_state = parse_input()
+<<<<<<< HEAD
+    path, actions, f_values = AStar_search(initial_state, goal_state)
+    print(path)
+    print(actions)
+    print(f_values)
+    # path, actions, f_values, generated_nodes = astar_search(
+    #     initial_state, goal_state)
+
+=======
     results, nodes_generated = AStar_search(initial_state, goal_state)
     depth, actions, f_values = results
 
